@@ -1,3 +1,6 @@
+// Hide console window in Windows
+#![cfg_attr(windows, windows_subsystem = "windows")]
+
 #[allow(unused_imports)]
 use async_std::net::{Shutdown, TcpListener, TcpStream, ToSocketAddrs};
 use futures_util::future::try_join;
@@ -257,6 +260,11 @@ async fn task() -> std::io::Result<()> {
 }
 
 fn main() {
+    #[cfg(windows)]
+    {
+        unsafe { winapi::um::wincon::AttachConsole(winapi::um::wincon::ATTACH_PARENT_PROCESS) };
+    }
+
     async_std::task::block_on(async {
         if let Err(err) = task().await {
             eprintln!("Failed to listen: {}", err);

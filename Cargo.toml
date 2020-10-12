@@ -12,7 +12,7 @@ futures-io = "0.3"
 once_cell = "1"
 
 [target.'cfg(windows)'.dependencies]
-winapi = "0.3"
+winapi = { version = "0.3", features = ["wincon"] }
 uuid = { version = "0.8", features = ["guid"] }
 
 [target.'cfg(unix)'.dependencies]
