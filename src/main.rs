@@ -1,9 +1,14 @@
 // Hide console window in Windows
 #![cfg_attr(windows, windows_subsystem = "windows")]
 
-#[allow(unused_imports)]
-use async_std::net::{Shutdown, TcpListener, TcpStream, ToSocketAddrs};
+use async_std::net::{Shutdown, TcpStream};
 use futures_util::future::try_join;
+
+#[cfg(windows)]
+use async_std::net::ToSocketAddrs;
+
+#[cfg(unix)]
+use async_std::os::unix::net::{UnixListener, UnixStream};
 
 #[cfg(windows)]
 mod windows {
@@ -199,14 +204,31 @@ mod linux {
 #[cfg(unix)]
 use crate::linux::*;
 
-async fn connect_stream(client: TcpStream, server: TcpStream) -> std::io::Result<()> {
+trait Stream: async_std::io::Read + async_std::io::Write + Clone + Unpin {
+    fn shutdown(&self, how: std::net::Shutdown) -> std::io::Result<()>;
+}
+
+impl Stream for &TcpStream {
+    fn shutdown(&self, how: std::net::Shutdown) -> std::io::Result<()> {
+        TcpStream::shutdown(self, how)
+    }
+}
+
+#[cfg(unix)]
+impl Stream for &UnixStream {
+    fn shutdown(&self, how: std::net::Shutdown) -> std::io::Result<()> {
+        UnixStream::shutdown(self, how)
+    }
+}
+
+async fn connect_stream<C: Stream, S: Stream>(client: C, server: S) -> std::io::Result<()> {
     let c2s = async {
-        async_std::io::copy(&mut &client, &mut &server).await?;
+        async_std::io::copy(&mut client.clone(), &mut server.clone()).await?;
         server.shutdown(Shutdown::Write)
     };
 
     let s2c = async {
-        async_std::io::copy(&mut &server, &mut &client).await?;
+        async_std::io::copy(&mut server.clone(), &mut client.clone()).await?;
         client.shutdown(Shutdown::Write)
     };
 
@@ -225,17 +247,13 @@ async fn task() -> std::io::Result<()> {
         .unwrap();
 
     #[cfg(unix)]
-    let listener = TcpListener::bind("127.0.0.1:6001").await?;
+    let listener = UnixListener::bind("/tmp/.X11-unix/X0").await?;
     #[cfg(windows)]
     let listener = VmSocket::bind(6000).await?;
 
     loop {
         #[cfg(unix)]
-        let client = {
-            let (stream, _) = listener.accept().await?;
-            let _ = stream.set_nodelay(true);
-            stream
-        };
+        let (client, _) = listener.accept().await?;
         #[cfg(windows)]
         let client = listener.accept().await?;
 
@@ -249,7 +267,7 @@ async fn task() -> std::io::Result<()> {
                     stream.set_nodelay(true)?;
                     stream
                 };
-                connect_stream(client, server).await
+                connect_stream(&client, &server).await
             }
             .await;
             if let Err(err) = result {
@@ -263,6 +281,12 @@ fn main() {
     #[cfg(windows)]
     {
         unsafe { winapi::um::wincon::AttachConsole(winapi::um::wincon::ATTACH_PARENT_PROCESS) };
+    }
+
+    #[cfg(unix)]
+    {
+        let _ = std::fs::create_dir_all("/tmp/.X11-unix");
+        let _ = std::fs::remove_file("/tmp/.X11-unix/X0");
     }
 
     async_std::task::block_on(async {
