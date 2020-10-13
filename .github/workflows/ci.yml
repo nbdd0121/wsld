@@ -19,6 +19,9 @@ jobs:
       - name: Build
         run: cargo build --release
 
+      - name: Strip Debug Symbols
+        run: strip target/release/x11-over-vsock
+
       - uses: actions/upload-artifact@v2
         with:
           name: 'wsl-client'

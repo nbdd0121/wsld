@@ -1,6 +1,8 @@
 X11 over Vsock
 ==============
 
+![CI](https://github.com/nbdd0121/x11-over-vsock/workflows/CI/badge.svg?branch=master)
+
 ## Background
 
 Windows will reset all external TCP connections when network changes or when PC resumes from disconencted sleep/hibernation, which include connections on the WSL bridge. If you are using X11, this can be annoying because all X11 connections over TCP will also drop.
@@ -16,6 +18,8 @@ Two executables are to be ran, one inside WSL2 and another outside. The program 
 This program is written in Rust. If you do not have Rust toolchain installed you can get it from https://rustup.rs/.
 
 Install in both WSL and Windows using `cargo install --git https://github.com/nbdd0121/x11-over-vsock` (The binary will be installed to `~/.cargo/bin/x11-over-vsock` and `%USERPROFILE%\.cargo\bin\x11-over-vsock.exe`).
+
+You can also download pre-built binaries from [GitHub Actions artifacts](https://github.com/nbdd0121/x11-over-vsock/actions).
 
 ## Usage
 
