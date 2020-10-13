@@ -1,0 +1,46 @@
+name: CI
+
+on: [push]
+
+jobs:
+  build-wsl:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          default: true
+          override: true
+
+      - name: Build
+        run: cargo build --release
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: 'wsl-client'
+          path: target/release/x11-over-vsock
+
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          default: true
+          override: true
+
+      - name: Build
+        run: cargo build --release
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: 'windows-server.exe'
+          path: target/release/x11-over-vsock.exe
