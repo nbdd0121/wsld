@@ -32,12 +32,6 @@ pub mod sync {
         *GUARD
     }
 
-    static VMID: Lazy<Uuid> = Lazy::new(|| {
-        let vmid_str = std::env::args().nth(1).expect("VMID not supplied");
-        let vmid: Uuid = vmid_str.parse().expect("VMID is not valid UUID");
-        vmid
-    });
-
     fn last_error() -> std::io::Error {
         std::io::Error::from_raw_os_error(unsafe { winapi::um::winsock2::WSAGetLastError() })
     }
@@ -59,7 +53,7 @@ pub mod sync {
     }
 
     impl VmSocket {
-        pub fn bind(port: u32) -> std::io::Result<VmSocket> {
+        pub fn bind(vmid: Uuid, port: u32) -> std::io::Result<VmSocket> {
             init();
             unsafe {
                 let mut local_addr: SOCKADDR_HV = std::mem::zeroed();
@@ -71,7 +65,7 @@ pub mod sync {
                 local_addr.ServiceId.Data2 = parts.1;
                 local_addr.ServiceId.Data3 = parts.2;
                 local_addr.ServiceId.Data4 = *parts.3;
-                let parts = VMID.as_fields();
+                let parts = vmid.as_fields();
                 local_addr.VmId.Data1 = parts.0;
                 local_addr.VmId.Data2 = parts.1;
                 local_addr.VmId.Data3 = parts.2;
@@ -117,8 +111,8 @@ pub mod sync {
 pub struct VmSocket(Async<sync::VmSocket>);
 
 impl VmSocket {
-    pub async fn bind(port: u32) -> std::io::Result<Self> {
-        Ok(Self(Async::new(sync::VmSocket::bind(port)?)?))
+    pub async fn bind(vmid: uuid::Uuid, port: u32) -> std::io::Result<Self> {
+        Ok(Self(Async::new(sync::VmSocket::bind(vmid, port)?)?))
     }
 
     pub async fn accept(&self) -> std::io::Result<TcpStream> {

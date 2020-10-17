@@ -8,6 +8,7 @@ pub struct ComputeSystem {
     pub system_type: String,
     pub owner: String,
     pub runtime_id: Uuid,
+    #[serde(default)]
     pub state: String,
 }
 
@@ -72,12 +73,12 @@ pub fn enumerate_compute_systems(query: &str) -> std::io::Result<Vec<ComputeSyst
     }
 }
 
-pub fn get_wsl_vmid() -> Option<Uuid> {
-    let vms = enumerate_compute_systems("{}").unwrap();
+pub fn get_wsl_vmid() -> std::io::Result<Option<Uuid>> {
+    let vms = enumerate_compute_systems("{}")?;
     for vm in vms {
         if vm.owner == "WSL" {
-            return Some(vm.id);
+            return Ok(Some(vm.id));
         }
     }
-    None
+    Ok(None)
 }
