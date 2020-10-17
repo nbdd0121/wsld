@@ -1,6 +1,9 @@
 // Hide console window in Windows
 #![cfg_attr(windows, windows_subsystem = "windows")]
 
+#[cfg(windows)]
+mod vmcompute;
+
 use async_std::net::{Shutdown, TcpStream};
 use futures_util::future::try_join;
 

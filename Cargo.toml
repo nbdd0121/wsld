@@ -12,8 +12,11 @@ futures-io = "0.3"
 once_cell = "1"
 
 [target.'cfg(windows)'.dependencies]
-winapi = { version = "0.3", features = ["wincon"] }
-uuid = "0.8"
+winapi = { version = "0.3", features = ["wincon", "libloaderapi", "combaseapi"] }
+widestring = "0.4"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1"
+uuid = { version = "0.8", features = ["serde"] }
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"
