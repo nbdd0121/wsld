@@ -26,6 +26,6 @@ You can also download pre-built binaries from [GitHub Actions artifacts](https:/
 In WSL, run `x11-over-vsock` and set `DISPLAY=:0`.
 
 In Windows, start a X server (e.g. VcXsrv) on TCP port 6000, and you can either:
-* Execute `hcsdiag list` with administrator privilege to get the VMID of your WSL instance, then `x11-over-vsock.exe <VMID>` (no administrator privilege required). WSL must be running before execution, and you will need to kill and start the process again if shutdown your WSL utility VM.
-* Execute `x11-over-vsock.exe` with administrator privilege. It will automatically retrieve WSL VMID. WSL must be running before execution, and you will need to kill and start the process again if shutdown your WSL utility VM.
+* Execute `hcsdiag list` with administrator privilege to get the VMID of your WSL instance, then `x11-over-vsock.exe <VMID>` (no administrator privilege required). WSL must be running before execution, and you will need to kill and start the process again if shutdown you shutdown the WSL utility VM.
+* Execute `x11-over-vsock.exe` with administrator privilege. It will automatically retrieve WSL VMID. WSL must be running before execution, and you will need to kill and start the process again if you shutdown the WSL utility VM.
 * Execute `x11-over-vsock.exe --daemon` with administrator privilege. It will poll WSL status every 5 seconds, and start/shutdown server automatically.

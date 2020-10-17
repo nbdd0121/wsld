@@ -23,9 +23,6 @@ use async_std::os::unix::net::{UnixListener, UnixStream};
 
 use vmsocket::VmSocket;
 
-#[cfg(unix)]
-use crate::linux::*;
-
 trait Stream: async_std::io::Read + async_std::io::Write + Clone + Unpin {
     fn shutdown(&self, how: std::net::Shutdown) -> std::io::Result<()>;
 }
@@ -98,7 +95,7 @@ fn main() {
                 if let Some(vmid) = vmid {
                     future = Some(async_std::task::spawn(async move {
                         // Three chances, to avoid a race between get_wsl_vmid and spawn.
-                        for i in 0..3 {
+                        for _ in 0..3 {
                             if let Err(err) = task(vmid).await {
                                 eprintln!("Failed to listen: {}", err);
                             }
@@ -125,7 +122,7 @@ fn main() {
     }
 }
 
-#[cfg(linux)]
+#[cfg(unix)]
 async fn task() -> std::io::Result<()> {
     let listener = UnixListener::bind("/tmp/.X11-unix/X0").await?;
 
@@ -145,7 +142,7 @@ async fn task() -> std::io::Result<()> {
     }
 }
 
-#[cfg(linux)]
+#[cfg(unix)]
 fn main() {
     // Remove existing socket
     let _ = std::fs::create_dir_all("/tmp/.X11-unix");
