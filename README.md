@@ -28,4 +28,34 @@ In WSL, run `x11-over-vsock` and set `DISPLAY=:0`.
 In Windows, start a X server (e.g. VcXsrv) on TCP port 6000, and you can either:
 * Execute `hcsdiag list` with administrator privilege to get the VMID of your WSL instance, then `x11-over-vsock.exe <VMID>` (no administrator privilege required). WSL must be running before execution, and you will need to kill and start the process again if shutdown you shutdown the WSL utility VM.
 * Execute `x11-over-vsock.exe` with administrator privilege. It will automatically retrieve WSL VMID. WSL must be running before execution, and you will need to kill and start the process again if you shutdown the WSL utility VM.
-* Execute `x11-over-vsock.exe --daemon` with administrator privilege. It will poll WSL status every 5 seconds, and start/shutdown server automatically.
+* Execute `x11-over-vsock.exe --daemon` with administrator privilege. It will poll WSL status every 5 seconds, and start/shutdown server automatically. A service manager such as NSSM (http://nssm.cc/) can be used to run this automatically in the background.
+
+## Example Configuration
+
+On Windows:
+
+(Chocolately instructions are included, but all of this can be done manually)
+
+1. Install an X server (e.g., `choco install xcxsrv`)
+1. Install NSSM: `choco install nssm`
+1. Use nssm to install service: `nssm.exe install x11-over-vsock` - set Path to where you put the `x11-over-vsock.exe` and add the Arguments to `--daemon`.
+
+![NSSM Configuration Image](images/nssm.png?raw=true)
+
+1. Start the x11-over-vsock service in PowerShell: `Start-Service x1l-over-vsock`.
+1. Start the X server
+
+In WSL:
+1. Place `x11-over-vsock` binary somewhere in your path (e.g., `~/bin`)
+1. Start `x11-over-vsock` automatically in `.bashrc` or `.zshrc` and set environment variables:
+
+    ```
+    if ! pgrep -u $USER x11-over-vsock >/dev/null 2>&1; then
+            x11-over-vsock &
+    fi
+    export DISPLAY=:0
+    ```
+1. Source the configuration (e.g., `source ~/.zshrc`)
+1. Start an X app (e.g., `xterm`)
+
+At this point, everything should be working as normal.
