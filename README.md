@@ -30,7 +30,7 @@ In Windows, start a X server (e.g. VcXsrv) on TCP port 6000, and you can either:
 * Execute `x11-over-vsock.exe` with administrator privilege. It will automatically retrieve WSL VMID. WSL must be running before execution, and you will need to kill and start the process again if you shutdown the WSL utility VM.
 * Execute `x11-over-vsock.exe --daemon` with administrator privilege. It will poll WSL status every 5 seconds, and start/shutdown server automatically.
 
-### Installation
+### Automatic Start Setup
 
 Perform both these tasks - on Windows and inside WSL2 - to get a
 fully-automatic setup that "does the right thing" even after reboot without
@@ -38,40 +38,31 @@ manual intervention:
 
 *On Windows:*
 
-* Copy `x11-over-vsock.exe` e.g. to
-  `%USERPROFILE%\.cargo\bin\x11-over-vsock.exe` if you didn't build it
-  yourself.
 * Create a Scheduled Task to start `x11-over-vsock.exe` at login
-    * Open "Task Scheduler"
-    * Actions &rarr; "Create Task..."
-    * General (tab): Run with highest privileges
-    * Triggers (tab): New (button), Begin the task, At log on
-    * Actions (tab): Start a program, Program/script =
-      `%USERPROFILE%\.cargo\bin\x11-over-vsock.exe` (remember quotes if
-      appropriate!),
-      Add arguments = `--daemon`
-    * Conditions (tab): Uncheck "Start the task only if the computer is on AC
-      power" and "Stop if the computer switches to battery power"
-    * Settings (tab): Uncheck "Stop the task if it runs longer than"
+    * Open `Task Scheduler`
+    * Actions &rarr; `Create Task...`
+    * General (tab): Check `Run with highest privileges`
+    * Triggers (tab): Click `New`, select `At log on` under `Begin the task`.
+    * Actions (tab): Click, `New`, select `Start a program` under `Action`, set `Program/script` to the path of `x11-over-vsock.exe` wherever it is placed, set `Add arguments` to `--daemon`.
+    * Conditions (tab): Uncheck `Start the task only if the computer is on AC power` and `Stop if the computer switches to battery power`
+    * Settings (tab): Uncheck `Stop the task if it runs longer than`
 
 It should now start up at every boot as Administrator with the `--daemon`
 option. Now either start `x11-over-vsock.exe` by right-click-ing on the newly
-created task and clicking "Run" or reboot the Windows 10 installation to start
+created task and clicking `Run` or reboot Windows to start
 it.
 
-*On Linux under WSL2:*
+*On WSL2:*
 
-* Copy `x11-over-vsock` e.g. to `~/.cargo/bin/x11-over-vsock` if you didn't
-  build it yourself.
-* Make sure `xset` is in your path, e.g. with `sudo apt-get install
-  x11-xserver-utils` in Ubuntu.
-* Add this to your `~/.bashrc` or `~/.zshrc`:
+* Make sure `xset` is installed, e.g. with `sudo apt-get install
+  x11-xserver-utils` in Debian-based distributions.
+* Add this to your `~/.profile` or `~/.bash_profile` or `~/.zlogin`:
 
 ``` bash
 export DISPLAY=:0
 
 if ! pgrep x11-over-vsock >> /dev/null 2>&1 ; then
-    nohup ~/.cargo/bin/x11-over-vsock > /dev/null < /dev/null 2>&1 &
+    nohup x11-over-vsock > /dev/null < /dev/null 2>&1 &
     disown
 
     # sleep until $DISPLAY is up
@@ -81,8 +72,4 @@ if ! pgrep x11-over-vsock >> /dev/null 2>&1 ; then
 fi
 ```
 
-Using `xset q` to test the `$DISPLAY` makes it possible to run a command like:
-
-    C:\Windows\System32\wsl.exe bash --login -c some-terminal
-
-Otherwise `some-terminal` will fail because the `$DISPLAY` isn't ready yet...
+Using `xset q` to test the `$DISPLAY` makes it possible to run a command like `wsl.exe bash --login -c some-terminal`, otherwise `some-terminal` will fail because the `$DISPLAY` isn't ready yet.
