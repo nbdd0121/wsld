@@ -1,5 +1,6 @@
 use async_io::Async;
-use async_std::net::TcpStream;
+use std::convert::TryInto;
+use tokio::net::TcpStream;
 
 pub mod sync {
     use once_cell::sync::Lazy;
@@ -117,6 +118,7 @@ impl VmSocket {
 
     pub async fn accept(&self) -> std::io::Result<TcpStream> {
         let stream = self.0.read_with(|io| io.accept()).await?;
-        Ok(stream.into())
+        stream.set_nonblocking(true)?;
+        stream.try_into()
     }
 }

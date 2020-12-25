@@ -1,4 +1,5 @@
-use async_std::net::TcpStream;
+use std::convert::TryInto;
+use tokio::net::TcpStream;
 
 pub mod sync {
     use std::net::TcpStream;
@@ -56,6 +57,8 @@ pub struct VmSocket;
 
 impl VmSocket {
     pub async fn connect(port: u32) -> std::io::Result<TcpStream> {
-        Ok(sync::VmSocket::connect(port)?.into())
+        let stream = sync::VmSocket::connect(port)?;
+        stream.set_nonblocking(true)?;
+        stream.try_into()
     }
 }

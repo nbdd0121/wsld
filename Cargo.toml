@@ -5,13 +5,14 @@ authors = ["Gary Guo <gary@garyguo.net>"]
 edition = "2018"
 
 [dependencies]
-async-std = "1"
-async-io = "1"
+tokio = { version = "1", features = ["net", "rt", "macros", "io-util", "time"] }
+mio = "0.7"
 futures-util = "0.3"
 futures-io = "0.3"
 once_cell = "1"
 
 [target.'cfg(windows)'.dependencies]
+async-io = "1"
 winapi = { version = "0.3", features = ["wincon", "libloaderapi", "combaseapi"] }
 widestring = "0.4"
 serde = { version = "1.0", features = ["derive"] }

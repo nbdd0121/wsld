@@ -12,47 +12,24 @@ mod vmsocket;
 #[path = "vmsocket.linux.rs"]
 mod vmsocket;
 
-use async_std::net::{Shutdown, TcpStream};
-use futures_util::future::try_join;
+use tokio::io::{AsyncRead, AsyncWrite, AsyncWriteExt};
+use tokio::pin;
 
+#[cfg(windows)]
+use tokio::net::TcpStream;
 #[cfg(windows)]
 use uuid::Uuid;
 
 #[cfg(unix)]
-use async_std::os::unix::net::{UnixListener, UnixStream};
+use tokio::net::UnixListener;
 
 use vmsocket::VmSocket;
 
-trait Stream: async_std::io::Read + async_std::io::Write + Clone + Unpin {
-    fn shutdown(&self, how: std::net::Shutdown) -> std::io::Result<()>;
-}
-
-impl Stream for &TcpStream {
-    fn shutdown(&self, how: std::net::Shutdown) -> std::io::Result<()> {
-        TcpStream::shutdown(self, how)
-    }
-}
-
-#[cfg(unix)]
-impl Stream for &UnixStream {
-    fn shutdown(&self, how: std::net::Shutdown) -> std::io::Result<()> {
-        UnixStream::shutdown(self, how)
-    }
-}
-
-async fn connect_stream<C: Stream, S: Stream>(client: C, server: S) -> std::io::Result<()> {
-    let c2s = async {
-        async_std::io::copy(&mut client.clone(), &mut server.clone()).await?;
-        server.shutdown(Shutdown::Write)
-    };
-
-    let s2c = async {
-        async_std::io::copy(&mut server.clone(), &mut client.clone()).await?;
-        client.shutdown(Shutdown::Write)
-    };
-
-    try_join(c2s, s2c).await?;
-    Ok(())
+async fn connect_stream<R: AsyncRead, W: AsyncWrite>(r: R, w: W) -> std::io::Result<()> {
+    pin!(r);
+    pin!(w);
+    tokio::io::copy(&mut r, &mut w).await?;
+    w.shutdown().await
 }
 
 #[cfg(windows)]
@@ -60,13 +37,17 @@ async fn task(vmid: Uuid) -> std::io::Result<()> {
     let listener = VmSocket::bind(vmid, 6000).await?;
 
     loop {
-        let client = listener.accept().await?;
+        let (client_r, client_w) = listener.accept().await?.into_split();
 
-        async_std::task::spawn(async move {
+        tokio::task::spawn(async move {
             let result = async {
                 let server = TcpStream::connect("localhost:6000").await?;
                 server.set_nodelay(true)?;
-                connect_stream(&client, &server).await
+                let (server_r, server_w) = server.into_split();
+                let a = tokio::task::spawn(connect_stream(client_r, server_w));
+                let b = tokio::task::spawn(connect_stream(server_r, client_w));
+                a.await.unwrap()?;
+                b.await.unwrap()
             }
             .await;
             if let Err(err) = result {
@@ -77,62 +58,66 @@ async fn task(vmid: Uuid) -> std::io::Result<()> {
 }
 
 #[cfg(windows)]
-fn main() {
+#[tokio::main(flavor = "current_thread")]
+async fn main() {
     unsafe { winapi::um::wincon::AttachConsole(winapi::um::wincon::ATTACH_PARENT_PROCESS) };
 
     let vmid_arg = std::env::args().nth(1);
 
     if let Some("--daemon") = vmid_arg.as_deref() {
         let mut prev_vmid = None;
-        let mut future: Option<async_std::task::JoinHandle<()>> = None;
+        let mut future: Option<tokio::task::JoinHandle<()>> = None;
         loop {
             let vmid = vmcompute::get_wsl_vmid().unwrap();
             if vmid != prev_vmid {
                 if let Some(future) = future.take() {
-                    async_std::task::block_on(future.cancel());
+                    future.abort();
                 }
                 prev_vmid = vmid;
                 if let Some(vmid) = vmid {
-                    future = Some(async_std::task::spawn(async move {
+                    future = Some(tokio::task::spawn(async move {
                         // Three chances, to avoid a race between get_wsl_vmid and spawn.
                         for _ in 0..3 {
                             if let Err(err) = task(vmid).await {
                                 eprintln!("Failed to listen: {}", err);
                             }
-                            async_std::task::sleep(std::time::Duration::from_secs(1)).await;
+                            tokio::time::sleep(std::time::Duration::from_secs(1)).await;
                         }
                         std::process::exit(1);
                     }));
                 }
             }
-            std::thread::sleep(std::time::Duration::from_secs(5));
+            tokio::time::sleep(std::time::Duration::from_secs(5)).await;
         }
     } else {
         let vmid = match vmid_arg {
             Some(str) => str.parse().expect("VMID is not valid UUID"),
-            None => vmcompute::get_wsl_vmid().unwrap().expect("WSL is not running"),
+            None => vmcompute::get_wsl_vmid()
+                .unwrap()
+                .expect("WSL is not running"),
         };
 
-        async_std::task::block_on(async {
-            if let Err(err) = task(vmid).await {
-                eprintln!("Failed to listen: {}", err);
-                return;
-            }
-        });
+        if let Err(err) = task(vmid).await {
+            eprintln!("Failed to listen: {}", err);
+            return;
+        }
     }
 }
 
 #[cfg(unix)]
 async fn task() -> std::io::Result<()> {
-    let listener = UnixListener::bind("/tmp/.X11-unix/X0").await?;
+    let listener = UnixListener::bind("/tmp/.X11-unix/X0")?;
 
     loop {
-        let (client, _) = listener.accept().await?;
+        let (client_r, client_w) = listener.accept().await?.0.into_split();
 
-        async_std::task::spawn(async move {
+        tokio::task::spawn(async move {
             let result = async {
-                let server = VmSocket::connect(6000).await?;
-                connect_stream(&client, &server).await
+                let (server_r, server_w) = VmSocket::connect(6000).await?.into_split();
+                let a = tokio::task::spawn(connect_stream(client_r, server_w));
+                let b = tokio::task::spawn(connect_stream(server_r, client_w));
+                a.await.unwrap()?;
+                b.await.unwrap()
             }
             .await;
             if let Err(err) = result {
@@ -143,15 +128,14 @@ async fn task() -> std::io::Result<()> {
 }
 
 #[cfg(unix)]
-fn main() {
+#[tokio::main(flavor = "current_thread")]
+async fn main() {
     // Remove existing socket
     let _ = std::fs::create_dir_all("/tmp/.X11-unix");
     let _ = std::fs::remove_file("/tmp/.X11-unix/X0");
 
-    async_std::task::block_on(async {
-        if let Err(err) = task().await {
-            eprintln!("Failed to listen: {}", err);
-            return;
-        }
-    });
+    if let Err(err) = task().await {
+        eprintln!("Failed to listen: {}", err);
+        return;
+    }
 }
