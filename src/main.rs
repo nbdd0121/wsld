@@ -12,7 +12,7 @@ mod vmsocket;
 #[path = "vmsocket.linux.rs"]
 mod vmsocket;
 
-use tokio::io::{AsyncRead, AsyncWrite, AsyncWriteExt};
+use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 use tokio::pin;
 
 #[cfg(windows)]
@@ -28,7 +28,14 @@ use vmsocket::VmSocket;
 async fn connect_stream<R: AsyncRead, W: AsyncWrite>(r: R, w: W) -> std::io::Result<()> {
     pin!(r);
     pin!(w);
-    tokio::io::copy(&mut r, &mut w).await?;
+    let mut buf = vec![0u8; 4096];
+    loop {
+        let size = r.read(&mut buf).await?;
+        if size == 0 {
+            break;
+        }
+        w.write_all(&buf[0..size]).await?;
+    }
     w.shutdown().await
 }
 
