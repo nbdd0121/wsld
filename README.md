@@ -19,7 +19,7 @@ This program is written in Rust. If you do not have Rust toolchain installed you
 
 Install in both WSL and Windows using `cargo install --git https://github.com/nbdd0121/x11-over-vsock` (The binary will be installed to `~/.cargo/bin/x11-over-vsock` and `%USERPROFILE%\.cargo\bin\x11-over-vsock.exe`).
 
-You can also download pre-built binaries from [GitHub Actions artifacts](https://github.com/nbdd0121/x11-over-vsock/actions).
+You can also download pre-built binaries from [GitHub Actions artifacts](https://github.com/nbdd0121/x11-over-vsock/actions?query=branch%3Amaster).
 
 ## Usage
 
