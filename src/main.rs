@@ -75,7 +75,9 @@ async fn main() {
         let mut prev_vmid = None;
         let mut future: Option<tokio::task::JoinHandle<()>> = None;
         loop {
-            let vmid = vmcompute::get_wsl_vmid().unwrap();
+            let vmid = tokio::task::spawn_blocking(|| vmcompute::get_wsl_vmid().unwrap())
+                .await
+                .unwrap();
             if vmid != prev_vmid {
                 if let Some(future) = future.take() {
                     future.abort();
