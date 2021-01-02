@@ -15,7 +15,7 @@ Two executables are to be ran, one inside WSL2 and another outside. The program 
 
 ## Build
 
-This program is written in Rust. If you do not have Rust toolchain installed you can get it from https://rustup.rs/.
+This program is written in Rust. If you do not have Rust toolchain installed you can get it from https://rustup.rs/. Building on Windows also requires Visual C++ toolchain.
 
 Install in both WSL and Windows using `cargo install --git https://github.com/nbdd0121/x11-over-vsock` (The binary will be installed to `~/.cargo/bin/x11-over-vsock` and `%USERPROFILE%\.cargo\bin\x11-over-vsock.exe`).
 
