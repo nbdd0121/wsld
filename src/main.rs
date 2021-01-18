@@ -12,6 +12,9 @@ mod vmsocket;
 #[path = "vmsocket.linux.rs"]
 mod vmsocket;
 
+#[cfg(unix)]
+mod x11socket;
+
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 use tokio::pin;
 
@@ -19,9 +22,6 @@ use tokio::pin;
 use tokio::net::TcpStream;
 #[cfg(windows)]
 use uuid::Uuid;
-
-#[cfg(unix)]
-use tokio::net::UnixListener;
 
 use vmsocket::VmSocket;
 
@@ -115,7 +115,8 @@ async fn main() {
 
 #[cfg(unix)]
 async fn task() -> std::io::Result<()> {
-    let listener = UnixListener::bind("/tmp/.X11-unix/X0")?;
+    let lock = x11socket::X11Lock::acquire(0)?;
+    let listener = lock.bind()?;
 
     loop {
         let (client_r, client_w) = listener.accept().await?.0.into_split();
@@ -139,10 +140,6 @@ async fn task() -> std::io::Result<()> {
 #[cfg(unix)]
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
-    // Remove existing socket
-    let _ = std::fs::create_dir_all("/tmp/.X11-unix");
-    let _ = std::fs::remove_file("/tmp/.X11-unix/X0");
-
     if let Err(err) = task().await {
         eprintln!("Failed to listen: {}", err);
         return;
