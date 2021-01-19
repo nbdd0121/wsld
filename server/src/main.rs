@@ -1,26 +1,12 @@
-// Hide console window in Windows
-#![cfg_attr(windows, windows_subsystem = "windows")]
+// Hide console window
+#![windows_subsystem = "windows"]
 
-#[cfg(windows)]
 mod vmcompute;
-
-#[cfg(windows)]
-#[path = "vmsocket.windows.rs"]
 mod vmsocket;
-
-#[cfg(unix)]
-#[path = "vmsocket.linux.rs"]
-mod vmsocket;
-
-#[cfg(unix)]
-mod x11socket;
 
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
-use tokio::pin;
-
-#[cfg(windows)]
 use tokio::net::TcpStream;
-#[cfg(windows)]
+use tokio::pin;
 use uuid::Uuid;
 
 use vmsocket::VmSocket;
@@ -39,7 +25,6 @@ async fn connect_stream<R: AsyncRead, W: AsyncWrite>(r: R, w: W) -> std::io::Res
     w.shutdown().await
 }
 
-#[cfg(windows)]
 async fn task(vmid: Uuid) -> std::io::Result<()> {
     let listener = VmSocket::bind(vmid, 6000).await?;
 
@@ -64,7 +49,6 @@ async fn task(vmid: Uuid) -> std::io::Result<()> {
     }
 }
 
-#[cfg(windows)]
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
     unsafe { winapi::um::wincon::AttachConsole(winapi::um::wincon::ATTACH_PARENT_PROCESS) };
@@ -110,38 +94,5 @@ async fn main() {
             eprintln!("Failed to listen: {}", err);
             return;
         }
-    }
-}
-
-#[cfg(unix)]
-async fn task() -> std::io::Result<()> {
-    let lock = x11socket::X11Lock::acquire(0)?;
-    let listener = lock.bind()?;
-
-    loop {
-        let (client_r, client_w) = listener.accept().await?.0.into_split();
-
-        tokio::task::spawn(async move {
-            let result = async {
-                let (server_r, server_w) = VmSocket::connect(6000).await?.into_split();
-                let a = tokio::task::spawn(connect_stream(client_r, server_w));
-                let b = tokio::task::spawn(connect_stream(server_r, client_w));
-                a.await.unwrap()?;
-                b.await.unwrap()
-            }
-            .await;
-            if let Err(err) = result {
-                eprintln!("Failed to transfer: {}", err);
-            }
-        });
-    }
-}
-
-#[cfg(unix)]
-#[tokio::main(flavor = "current_thread")]
-async fn main() {
-    if let Err(err) = task().await {
-        eprintln!("Failed to listen: {}", err);
-        return;
     }
 }

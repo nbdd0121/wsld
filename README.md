@@ -17,18 +17,18 @@ Two executables are to be ran, one inside WSL2 and another outside. The program 
 
 This program is written in Rust. If you do not have Rust toolchain installed you can get it from https://rustup.rs/. Building on Windows also requires Visual C++ toolchain.
 
-Install in both WSL and Windows using `cargo install --git https://github.com/nbdd0121/x11-over-vsock` (The binary will be installed to `~/.cargo/bin/x11-over-vsock` and `%USERPROFILE%\.cargo\bin\x11-over-vsock.exe`).
+Install in WSL using `cargo install --git https://github.com/nbdd0121/x11-over-vsock x11-over-vsock-client` and install in Windows using `cargo install --git https://github.com/nbdd0121/x11-over-vsock x11-over-vsock-server` (The binary will be installed to `~/.cargo/bin/x11-over-vsock-client` and `%USERPROFILE%\.cargo\bin\x11-over-vsock-server.exe`).
 
 You can also download pre-built binaries from [GitHub Actions artifacts](https://github.com/nbdd0121/x11-over-vsock/actions?query=branch%3Amaster).
 
 ## Usage
 
-In WSL, run `x11-over-vsock` and set `DISPLAY=:0`.
+In WSL, run `x11-over-vsock-client` and set `DISPLAY=:0`.
 
 In Windows, start a X server (e.g. VcXsrv) on TCP port 6000, and you can either:
-* Execute `hcsdiag list` with administrator privilege to get the VMID of your WSL instance, then `x11-over-vsock.exe <VMID>` (no administrator privilege required). WSL must be running before execution, and you will need to kill and start the process again if shutdown you shutdown the WSL utility VM.
-* Execute `x11-over-vsock.exe` with administrator privilege. It will automatically retrieve WSL VMID. WSL must be running before execution, and you will need to kill and start the process again if you shutdown the WSL utility VM.
-* Execute `x11-over-vsock.exe --daemon` with administrator privilege. It will poll WSL status every 5 seconds, and start/shutdown server automatically.
+* Execute `hcsdiag list` with administrator privilege to get the VMID of your WSL instance, then `x11-over-vsock-server.exe <VMID>` (no administrator privilege required). WSL must be running before execution, and you will need to kill and start the process again if shutdown you shutdown the WSL utility VM.
+* Execute `x11-over-vsock-server.exe` with administrator privilege. It will automatically retrieve WSL VMID. WSL must be running before execution, and you will need to kill and start the process again if you shutdown the WSL utility VM.
+* Execute `x11-over-vsock-server.exe --daemon` with administrator privilege. It will poll WSL status every 5 seconds, and start/shutdown server automatically.
 
 ### Automatic Start Setup
 
@@ -38,17 +38,17 @@ manual intervention:
 
 *On Windows:*
 
-* Create a Scheduled Task to start `x11-over-vsock.exe` at login
+* Create a Scheduled Task to start `x11-over-vsock-server.exe` at login
     * Open `Task Scheduler`
     * Actions &rarr; `Create Task...`
     * General (tab): Check `Run with highest privileges`
     * Triggers (tab): Click `New`, select `At log on` under `Begin the task`.
-    * Actions (tab): Click, `New`, select `Start a program` under `Action`, set `Program/script` to the path of `x11-over-vsock.exe` wherever it is placed, set `Add arguments` to `--daemon`.
+    * Actions (tab): Click, `New`, select `Start a program` under `Action`, set `Program/script` to the path of `x11-over-vsock-server.exe` wherever it is placed, set `Add arguments` to `--daemon`.
     * Conditions (tab): Uncheck `Start the task only if the computer is on AC power` and `Stop if the computer switches to battery power`
     * Settings (tab): Uncheck `Stop the task if it runs longer than`
 
 It should now start up at every boot as Administrator with the `--daemon`
-option. Now either start `x11-over-vsock.exe` by right-click-ing on the newly
+option. Now either start `x11-over-vsock-server.exe` by right-click-ing on the newly
 created task and clicking `Run` or reboot Windows to start
 it.
 
@@ -61,8 +61,8 @@ it.
 ``` bash
 export DISPLAY=:0
 
-if ! pgrep x11-over-vsock >> /dev/null 2>&1 ; then
-    nohup x11-over-vsock > /dev/null < /dev/null 2>&1 &
+if ! pgrep x11-over-vsock-client >> /dev/null 2>&1 ; then
+    nohup x11-over-vsock-client > /dev/null < /dev/null 2>&1 &
     disown
 
     # sleep until $DISPLAY is up

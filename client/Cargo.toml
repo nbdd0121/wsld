@@ -1,0 +1,9 @@
+[package]
+name = "x11-over-vsock-client"
+version = "0.1.0"
+authors = ["Gary Guo <gary@garyguo.net>"]
+edition = "2018"
+
+[dependencies]
+tokio = { version = "1", features = ["net", "rt", "macros", "io-util", "time"] }
+libc = "0.2"

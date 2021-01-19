@@ -17,15 +17,16 @@ jobs:
           override: true
 
       - name: Build
+        working-directory: client
         run: cargo build --release
 
       - name: Strip Debug Symbols
-        run: strip target/release/x11-over-vsock
+        run: strip target/release/x11-over-vsock-client
 
       - uses: actions/upload-artifact@v2
         with:
           name: 'wsl-client'
-          path: target/release/x11-over-vsock
+          path: target/release/x11-over-vsock-client
 
   build-windows:
     runs-on: windows-latest
@@ -41,9 +42,10 @@ jobs:
           override: true
 
       - name: Build
+        working-directory: server
         run: cargo build --release
 
       - uses: actions/upload-artifact@v2
         with:
           name: 'windows-server.exe'
-          path: target/release/x11-over-vsock.exe
+          path: target/release/x11-over-vsock-server.exe
