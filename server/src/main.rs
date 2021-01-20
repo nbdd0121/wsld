@@ -1,6 +1,7 @@
 // Hide console window
 #![windows_subsystem = "windows"]
 
+mod time;
 mod vmcompute;
 mod vmsocket;
 

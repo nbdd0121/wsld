@@ -1,3 +1,4 @@
+mod time;
 mod vmsocket;
 mod x11socket;
 
