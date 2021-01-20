@@ -5,10 +5,12 @@ mod x11;
 mod x11socket;
 
 use config::Config;
+use vmsocket::VmSocket;
 
 use once_cell::sync::Lazy;
 use std::io::ErrorKind;
 use std::process::exit;
+use tokio::io::AsyncWriteExt;
 
 static CONFIG: Lazy<Config> = Lazy::new(|| {
     let mut config_path = dirs::home_dir().unwrap_or_else(|| {
@@ -36,9 +38,34 @@ static CONFIG: Lazy<Config> = Lazy::new(|| {
     })
 });
 
+async fn wait_host_up() -> std::io::Result<()> {
+    let mut retry = 5usize;
+    loop {
+        match VmSocket::connect(CONFIG.service_port).await {
+            Ok(mut stream) => {
+                stream.write_all(b"noop").await?;
+                return Ok(());
+            }
+            Err(err) if err.kind() == ErrorKind::TimedOut => {
+                if retry == 0 {
+                    return Err(err);
+                }
+                retry -= 1;
+            }
+            Err(err) => return Err(err),
+        }
+    }
+}
+
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
     Lazy::force(&CONFIG);
+
+    if let Err(err) = wait_host_up().await {
+        eprintln!("Cannot connect to wsldhost: {}", err);
+        return;
+    }
+
     let mut tasks = Vec::new();
 
     if let Some(config) = &CONFIG.time {

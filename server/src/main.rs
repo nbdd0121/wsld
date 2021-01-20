@@ -53,6 +53,7 @@ async fn handle_stream(mut stream: TcpStream) -> std::io::Result<()> {
     match &func {
         b"x11\0" => handle_x11(stream).await,
         b"time" => time::handle_time(stream).await,
+        b"noop" => Ok(()),
         _ => Err(Error::new(
             ErrorKind::InvalidData,
             format!("unknown function {:?}", func),
