@@ -26,10 +26,11 @@ In WSL, you will need to put config file `.wsld.toml` in your home directory. It
 display = 0
 
 # Leave out this section to disable time synchronisation
+# If you need time synchronisation, you should either run x11-over-vsock-client with root, or give it `cap_sys_time` capability using `sudo setcap cap_sys_time+eip <PATH to x11-over-vsock-client>`.
 [time]
 # Interval between syncs
 # Default to 10min, can be omitted
-interval = 1hr
+interval = "1hr"
 ```
 then run `x11-over-vsock-client` and set `DISPLAY=:0`.
 
