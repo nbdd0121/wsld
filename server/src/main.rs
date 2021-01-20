@@ -4,43 +4,17 @@
 mod time;
 mod vmcompute;
 mod vmsocket;
+mod x11;
 
 use std::io::{Error, ErrorKind};
-use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
+use tokio::io::AsyncReadExt;
 use tokio::net::TcpStream;
-use tokio::pin;
 use uuid::Uuid;
 
 use vmsocket::VmSocket;
 
 // The Hyper-V socket used for service.
-const SERVICE_PORT: u32 = 6000;
-
-async fn connect_stream<R: AsyncRead, W: AsyncWrite>(r: R, w: W) -> std::io::Result<()> {
-    pin!(r);
-    pin!(w);
-    let mut buf = vec![0u8; 4096];
-    loop {
-        let size = r.read(&mut buf).await?;
-        if size == 0 {
-            break;
-        }
-        w.write_all(&buf[0..size]).await?;
-    }
-    w.shutdown().await
-}
-
-async fn handle_x11(stream: TcpStream) -> std::io::Result<()> {
-    let (client_r, client_w) = stream.into_split();
-
-    let server = TcpStream::connect("localhost:6000").await?;
-    server.set_nodelay(true)?;
-    let (server_r, server_w) = server.into_split();
-    let a = tokio::task::spawn(connect_stream(client_r, server_w));
-    let b = tokio::task::spawn(connect_stream(server_r, client_w));
-    a.await.unwrap()?;
-    b.await.unwrap()
-}
+const SERVICE_PORT: u32 = 6001;
 
 async fn handle_stream(mut stream: TcpStream) -> std::io::Result<()> {
     // Read the function code at the start of the stream for demultiplexing
@@ -51,7 +25,7 @@ async fn handle_stream(mut stream: TcpStream) -> std::io::Result<()> {
     };
 
     match &func {
-        b"x11\0" => handle_x11(stream).await,
+        b"x11\0" => x11::handle_x11(stream).await,
         b"time" => time::handle_time(stream).await,
         b"noop" => Ok(()),
         _ => Err(Error::new(
