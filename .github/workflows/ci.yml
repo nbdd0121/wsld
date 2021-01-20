@@ -21,12 +21,12 @@ jobs:
         run: cargo build --release
 
       - name: Strip Debug Symbols
-        run: strip target/release/x11-over-vsock-client
+        run: strip target/release/wsld
 
       - uses: actions/upload-artifact@v2
         with:
-          name: 'x11-over-vsock-client'
-          path: target/release/x11-over-vsock-client
+          name: 'wsld'
+          path: target/release/wsld
 
   build-windows:
     runs-on: windows-latest
@@ -47,5 +47,5 @@ jobs:
 
       - uses: actions/upload-artifact@v2
         with:
-          name: 'x11-over-vsock-server.exe'
-          path: target/release/x11-over-vsock-server.exe
+          name: 'wsldhost.exe'
+          path: target/release/wsldhost.exe

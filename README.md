@@ -11,7 +11,7 @@ Implementaion detail can be found [here](docs/impl.md).
 
 This program is written in Rust. If you do not have Rust toolchain installed you can get it from https://rustup.rs/. Building on Windows also requires Visual C++ toolchain.
 
-Install in WSL using `cargo install --git https://github.com/nbdd0121/x11-over-vsock x11-over-vsock-client` and install in Windows using `cargo install --git https://github.com/nbdd0121/x11-over-vsock x11-over-vsock-server` (The binary will be installed to `~/.cargo/bin/x11-over-vsock-client` and `%USERPROFILE%\.cargo\bin\x11-over-vsock-server.exe`).
+Install in WSL using `cargo install --git https://github.com/nbdd0121/x11-over-vsock wsld` and install in Windows using `cargo install --git https://github.com/nbdd0121/x11-over-vsock wsldhost` (The binary will be installed to `~/.cargo/bin/wsld` and `%USERPROFILE%\.cargo\bin\wsldhost.exe`).
 
 You can also download pre-built binaries from [GitHub Actions artifacts](https://github.com/nbdd0121/x11-over-vsock/actions?query=branch%3Amaster).
 
@@ -26,15 +26,15 @@ In WSL, you will need to put config file `.wsld.toml` in your home directory. It
 display = 0
 
 # Leave out this section to disable time synchronisation
-# If you need time synchronisation, you should either run x11-over-vsock-client with root, or give it `cap_sys_time` capability using `sudo setcap cap_sys_time+eip <PATH to x11-over-vsock-client>`.
+# If you need time synchronisation, you should either run wsld with root, or give it `cap_sys_time` capability using `sudo setcap cap_sys_time+eip <PATH to wsld>`.
 [time]
 # Interval between syncs
 # Default to 10min, can be omitted
 interval = "1hr"
 ```
-then run `x11-over-vsock-client` and set `DISPLAY=:0`.
+then run `wsld` and set `DISPLAY=:0`.
 
-In Windows, start a X server (e.g. VcXsrv) on TCP port 6000, and execute `x11-over-vsock-server.exe --daemon` with administrator privilege. To know why administrator privilege is needed, check out [implementation detail](docs/impl.md).
+In Windows, start a X server (e.g. VcXsrv) on TCP port 6000, and execute `wsldhost.exe --daemon` with administrator privilege. To know why administrator privilege is needed, check out [implementation detail](docs/impl.md).
 
 To automatically start both services without manual intervention, see [here](docs/auto.md).
 

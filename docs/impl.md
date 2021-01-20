@@ -19,7 +19,7 @@ The only way around is to retrieve WSL VM's VMID and listen on that specific add
 
 The WSL utility VM is created dynamically, so it does not exist (nor does its VMID) when WSL is not running. The VM gets destroyed when WSL shuts down, and its VMID will change when WSL is launched next time. So the daemon mode will poll WSL status every 5 seconds, and start/shutdown server accordingly.
 
-`x11-over-vsock-server` can be launched with a specific VMID, if you prefer to find VMID woth `hcsdiag list` yourself or use a Hyper-V VM's VMID.
+`wsldhost` can be launched with a specific VMID, if you prefer to find VMID woth `hcsdiag list` yourself or use a Hyper-V VM's VMID.
 
 ## Clock Skew Problem
 

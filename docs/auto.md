@@ -7,17 +7,17 @@ manual intervention:
 
 ## On Windows
 
-Create a Scheduled Task to start `x11-over-vsock-server.exe` at login
+Create a Scheduled Task to start `wsldhost.exe` at login
 * Open `Task Scheduler`
 * Actions &rarr; `Create Task...`
 * General (tab): Check `Run with highest privileges`
 * Triggers (tab): Click `New`, select `At log on` under `Begin the task`.
-* Actions (tab): Click, `New`, select `Start a program` under `Action`, set `Program/script` to the path of `x11-over-vsock-server.exe` wherever it is placed, set `Add arguments` to `--daemon`.
+* Actions (tab): Click, `New`, select `Start a program` under `Action`, set `Program/script` to the path of `wsldhost.exe` wherever it is placed, set `Add arguments` to `--daemon`.
 * Conditions (tab): Uncheck `Start the task only if the computer is on AC power` and `Stop if the computer switches to battery power`
 * Settings (tab): Uncheck `Stop the task if it runs longer than`
 
 It should now start up at every boot as Administrator with the `--daemon`
-option. Now start `x11-over-vsock-server.exe` by right-click-ing on the newly
+option. Now start `wsldhost.exe` by right-click-ing on the newly
 created task and clicking `Run`.
 
 ## On WSL2
@@ -29,8 +29,8 @@ created task and clicking `Run`.
 ``` bash
 export DISPLAY=:0
 
-if ! pgrep x11-over-vsock-client >> /dev/null 2>&1 ; then
-    nohup x11-over-vsock-client > /dev/null < /dev/null 2>&1 &
+if ! pgrep wsld >> /dev/null 2>&1 ; then
+    nohup wsld > /dev/null < /dev/null 2>&1 &
     disown
 
     # sleep until $DISPLAY is up
