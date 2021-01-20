@@ -70,6 +70,6 @@ impl X11Lock {
         let _ = std::fs::create_dir_all("/tmp/.X11-unix");
         let _ = std::fs::remove_file(&name);
 
-        UnixListener::bind("/tmp/.X11-unix/X0")
+        UnixListener::bind(name)
     }
 }

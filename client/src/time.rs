@@ -1,11 +1,13 @@
-use super::VmSocket;
+use super::config::TimeConfig;
+use super::vmsocket::VmSocket;
+use super::CONFIG;
 
 use std::io::{Error, ErrorKind};
 use std::time::{Duration, SystemTime};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
 async fn sync_time() -> std::io::Result<()> {
-    let mut stream = VmSocket::connect(6000).await?;
+    let mut stream = VmSocket::connect(CONFIG.service_port).await?;
     let start = SystemTime::now()
         .duration_since(SystemTime::UNIX_EPOCH)
         .unwrap();
@@ -73,9 +75,9 @@ async fn sync_time() -> std::io::Result<()> {
     result
 }
 
-pub async fn timekeeper() -> std::io::Result<()> {
+pub async fn timekeeper(config: &'static TimeConfig) -> std::io::Result<()> {
     loop {
         sync_time().await?;
-        tokio::time::sleep(Duration::from_secs(60)).await;
+        tokio::time::sleep(config.interval).await;
     }
 }

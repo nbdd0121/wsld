@@ -5,12 +5,16 @@ mod time;
 mod vmcompute;
 mod vmsocket;
 
+use std::io::{Error, ErrorKind};
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 use tokio::net::TcpStream;
 use tokio::pin;
 use uuid::Uuid;
 
 use vmsocket::VmSocket;
+
+// The Hyper-V socket used for service.
+const SERVICE_PORT: u32 = 6000;
 
 async fn connect_stream<R: AsyncRead, W: AsyncWrite>(r: R, w: W) -> std::io::Result<()> {
     pin!(r);
@@ -26,25 +30,46 @@ async fn connect_stream<R: AsyncRead, W: AsyncWrite>(r: R, w: W) -> std::io::Res
     w.shutdown().await
 }
 
+async fn handle_x11(stream: TcpStream) -> std::io::Result<()> {
+    let (client_r, client_w) = stream.into_split();
+
+    let server = TcpStream::connect("localhost:6000").await?;
+    server.set_nodelay(true)?;
+    let (server_r, server_w) = server.into_split();
+    let a = tokio::task::spawn(connect_stream(client_r, server_w));
+    let b = tokio::task::spawn(connect_stream(server_r, client_w));
+    a.await.unwrap()?;
+    b.await.unwrap()
+}
+
+async fn handle_stream(mut stream: TcpStream) -> std::io::Result<()> {
+    // Read the function code at the start of the stream for demultiplexing
+    let func = {
+        let mut buf = [0; 4];
+        stream.read_exact(&mut buf).await?;
+        buf
+    };
+
+    match &func {
+        b"x11\0" => handle_x11(stream).await,
+        b"time" => time::handle_time(stream).await,
+        _ => Err(Error::new(
+            ErrorKind::InvalidData,
+            format!("unknown function {:?}", func),
+        )),
+    }
+}
+
 async fn task(vmid: Uuid) -> std::io::Result<()> {
-    let listener = VmSocket::bind(vmid, 6000).await?;
+    let listener = VmSocket::bind(vmid, SERVICE_PORT).await?;
 
     loop {
-        let (client_r, client_w) = listener.accept().await?.into_split();
+        let stream = listener.accept().await?;
 
         tokio::task::spawn(async move {
-            let result = async {
-                let server = TcpStream::connect("localhost:6000").await?;
-                server.set_nodelay(true)?;
-                let (server_r, server_w) = server.into_split();
-                let a = tokio::task::spawn(connect_stream(client_r, server_w));
-                let b = tokio::task::spawn(connect_stream(server_r, client_w));
-                a.await.unwrap()?;
-                b.await.unwrap()
-            }
-            .await;
+            let result = handle_stream(stream).await;
             if let Err(err) = result {
-                eprintln!("Failed to transfer: {}", err);
+                eprintln!("Error: {}", err);
             }
         });
     }

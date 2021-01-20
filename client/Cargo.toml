@@ -8,3 +8,8 @@ edition = "2018"
 tokio = { version = "1", features = ["net", "rt", "macros", "io-util", "time"] }
 libc = "0.2"
 humantime = "2.1"
+humantime-serde = "1.0"
+serde = { version = "1", features = [ "derive" ] }
+toml = "0.5"
+once_cell = "1.5"
+dirs = "3.0"
