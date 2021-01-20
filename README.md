@@ -1,19 +1,21 @@
-X11 over Vsock
+WSLD: WSL Daemon
 ==============
 
-![CI](https://github.com/nbdd0121/x11-over-vsock/workflows/CI/badge.svg?branch=master)
+![CI](https://github.com/nbdd0121/wsld/workflows/CI/badge.svg?branch=master)
 
 Persist X11 connection when network changes or PC resumes from disconencted sleep/hibernation, and keep your WSL time in sync.
 
-Implementaion detail can be found [here](docs/impl.md).
+Formerly called x11-over-vsock; renamed to wsld as it gained extra functionality.
+
+Implementation detail can be found [here](docs/impl.md).
 
 ## Build
 
 This program is written in Rust. If you do not have Rust toolchain installed you can get it from https://rustup.rs/. Building on Windows also requires Visual C++ toolchain.
 
-Install in WSL using `cargo install --git https://github.com/nbdd0121/x11-over-vsock wsld` and install in Windows using `cargo install --git https://github.com/nbdd0121/x11-over-vsock wsldhost` (The binary will be installed to `~/.cargo/bin/wsld` and `%USERPROFILE%\.cargo\bin\wsldhost.exe`).
+Install in WSL using `cargo install --git https://github.com/nbdd0121/wsld wsld` and install in Windows using `cargo install --git https://github.com/nbdd0121/wsld wsldhost` (The binary will be installed to `~/.cargo/bin/wsld` and `%USERPROFILE%\.cargo\bin\wsldhost.exe`).
 
-You can also download pre-built binaries from [GitHub Actions artifacts](https://github.com/nbdd0121/x11-over-vsock/actions?query=branch%3Amaster).
+You can also download pre-built binaries from [GitHub Actions artifacts](https://github.com/nbdd0121/wsld/actions?query=branch%3Amaster).
 
 ## Usage
 
