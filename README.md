@@ -23,7 +23,7 @@ In WSL, you will need to put config file `.wsld.toml` in your home directory. It
 ```toml
 # Leave out this section to disable X11 forwarding
 [x11]
-# X11 display number to listen *inside* WSL. The X server in Windows currently is fixed to be on port 6000.
+# X11 display number to listen *inside* WSL. The X server in Windows can specified as argument when running wsldhost.exe.
 # Default to 0, can be omitted.
 display = 0
 
@@ -36,7 +36,7 @@ interval = "1hr"
 ```
 then run `wsld` and set `DISPLAY=:0`.
 
-In Windows, start a X server (e.g. VcXsrv) on TCP port 6000, and execute `wsldhost.exe --daemon` with administrator privilege. To know why administrator privilege is needed, check out [implementation detail](docs/impl.md).
+In Windows, start a X server (e.g. VcXsrv) on TCP port 6000, and execute `wsldhost.exe --daemon` with administrator privilege. To know why administrator privilege is needed, check out [implementation detail](docs/impl.md). If your X server runs on a different port, you can add `--display localhost:<port>` to arguments.
 
 To automatically start both services without manual intervention, see [here](docs/auto.md).
 
