@@ -7,6 +7,7 @@ mod x11socket;
 use config::Config;
 
 use once_cell::sync::Lazy;
+use std::io::ErrorKind;
 use std::process::exit;
 
 static CONFIG: Lazy<Config> = Lazy::new(|| {
@@ -15,10 +16,20 @@ static CONFIG: Lazy<Config> = Lazy::new(|| {
         exit(1);
     });
     config_path.push(".wsld.toml");
-    let config_file = std::fs::read(config_path).unwrap_or_else(|err| {
-        eprintln!("cannot read ~/.wsld.toml: {}", err);
-        exit(1);
-    });
+    let config_file = match std::fs::read(config_path) {
+        Ok(f) => f,
+        Err(err) if err.kind() == ErrorKind::NotFound => {
+            // If .wsld.toml isn't there, do its name: X11 forwarding
+            return Config {
+                x11: Some(Default::default()),
+                ..Default::default()
+            };
+        }
+        Err(err) => {
+            eprintln!("cannot read ~/.wsld.toml: {}", err);
+            exit(1);
+        }
+    };
     toml::from_slice(&config_file).unwrap_or_else(|err| {
         eprintln!("invalid config file: {}", err);
         exit(1);

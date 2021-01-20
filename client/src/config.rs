@@ -17,6 +17,16 @@ pub struct Config {
     pub x11: Option<X11Config>,
 }
 
+impl Default for Config {
+    fn default() -> Self {
+        Config {
+            service_port: default_service_port(),
+            time: None,
+            x11: None,
+        }
+    }
+}
+
 fn default_interval() -> Duration {
     // Every 10 minutes
     Duration::from_secs(600)
@@ -38,4 +48,12 @@ fn default_display() -> u32 {
 pub struct X11Config {
     #[serde(default = "default_display")]
     pub display: u32,
+}
+
+impl Default for X11Config {
+    fn default() -> Self {
+        X11Config {
+            display: default_display(),
+        }
+    }
 }
