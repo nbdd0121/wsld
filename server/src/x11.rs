@@ -1,3 +1,5 @@
+use super::CONFIG;
+
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 use tokio::net::TcpStream;
 
@@ -19,7 +21,7 @@ async fn connect_stream<R: AsyncRead + Unpin, W: AsyncWrite + Unpin>(
 pub async fn handle_x11(stream: TcpStream) -> std::io::Result<()> {
     let (client_r, client_w) = stream.into_split();
 
-    let server = TcpStream::connect("localhost:6000").await?;
+    let server = TcpStream::connect(&CONFIG.x11.display).await?;
     server.set_nodelay(true)?;
     let (server_r, server_w) = server.into_split();
     let a = tokio::task::spawn(connect_stream(client_r, server_w));

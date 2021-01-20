@@ -1,20 +1,23 @@
 // Hide console window
 #![windows_subsystem = "windows"]
 
+mod config;
 mod time;
 mod vmcompute;
 mod vmsocket;
 mod x11;
 
+use once_cell::sync::Lazy;
 use std::io::{Error, ErrorKind};
+use structopt::StructOpt;
 use tokio::io::AsyncReadExt;
 use tokio::net::TcpStream;
 use uuid::Uuid;
 
+use config::Config;
 use vmsocket::VmSocket;
 
-// The Hyper-V socket used for service.
-const SERVICE_PORT: u32 = 6001;
+static CONFIG: Lazy<Config> = Lazy::new(|| Config::from_args());
 
 async fn handle_stream(mut stream: TcpStream) -> std::io::Result<()> {
     // Read the function code at the start of the stream for demultiplexing
@@ -36,7 +39,7 @@ async fn handle_stream(mut stream: TcpStream) -> std::io::Result<()> {
 }
 
 async fn task(vmid: Uuid) -> std::io::Result<()> {
-    let listener = VmSocket::bind(vmid, SERVICE_PORT).await?;
+    let listener = VmSocket::bind(vmid, CONFIG.service_port).await?;
 
     loop {
         let stream = listener.accept().await?;
@@ -54,9 +57,7 @@ async fn task(vmid: Uuid) -> std::io::Result<()> {
 async fn main() {
     unsafe { winapi::um::wincon::AttachConsole(winapi::um::wincon::ATTACH_PARENT_PROCESS) };
 
-    let vmid_arg = std::env::args().nth(1);
-
-    if let Some("--daemon") = vmid_arg.as_deref() {
+    if CONFIG.daemon {
         let mut prev_vmid = None;
         let mut future: Option<tokio::task::JoinHandle<()>> = None;
         loop {
@@ -84,8 +85,8 @@ async fn main() {
             tokio::time::sleep(std::time::Duration::from_secs(5)).await;
         }
     } else {
-        let vmid = match vmid_arg {
-            Some(str) => str.parse().expect("VMID is not valid UUID"),
+        let vmid = match CONFIG.vmid {
+            Some(str) => str,
             None => vmcompute::get_wsl_vmid()
                 .unwrap()
                 .expect("WSL is not running"),
