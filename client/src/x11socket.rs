@@ -13,7 +13,7 @@ impl Drop for X11Lock {
 }
 
 impl X11Lock {
-    pub fn acquire(display: u32) -> Result<Self> {
+    pub fn acquire(display: u32, force: bool) -> Result<Self> {
         let name = format!("/tmp/.X{}-lock", display);
 
         loop {
@@ -49,7 +49,7 @@ impl X11Lock {
                             != libc::ESRCH;
 
                     // The process is still alive
-                    if alive {
+                    if alive && !force {
                         return Err(Error::new(
                             std::io::ErrorKind::AddrInUse,
                             format!("X{} is current in use", display),

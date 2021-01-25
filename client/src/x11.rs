@@ -34,7 +34,7 @@ async fn handle_stream(stream: UnixStream) -> std::io::Result<()> {
 }
 
 pub async fn x11_forward(config: &'static X11Config) -> std::io::Result<()> {
-    let lock = X11Lock::acquire(config.display)?;
+    let lock = X11Lock::acquire(config.display, config.force)?;
     let listener = lock.bind()?;
 
     loop {

@@ -48,12 +48,16 @@ fn default_display() -> u32 {
 pub struct X11Config {
     #[serde(default = "default_display")]
     pub display: u32,
+
+    #[serde(default)]
+    pub force: bool,
 }
 
 impl Default for X11Config {
     fn default() -> Self {
         X11Config {
             display: default_display(),
+            force: false,
         }
     }
 }
