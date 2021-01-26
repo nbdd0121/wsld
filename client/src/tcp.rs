@@ -84,7 +84,7 @@ pub async fn execute_iptables(config: &'static TcpForwardConfig, cmd: &str) -> s
 }
 
 pub async fn tcp_forward(config: &'static TcpForwardConfig) -> std::io::Result<()> {
-    let listener = TcpListener::bind(("localhost", config.service_port)).await?;
+    let listener = TcpListener::bind(("127.0.0.1", config.service_port)).await?;
 
     let _ = execute_iptables(config, "-N wsld").await?;
     execute_iptables(config, "-F wsld").await?.unwrap();

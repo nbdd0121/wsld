@@ -25,6 +25,6 @@ pub struct Config {
 
 #[derive(Debug, StructOpt)]
 pub struct X11Config {
-    #[structopt(long, default_value = "localhost:6000")]
+    #[structopt(long, default_value = "127.0.0.1:6000")]
     pub display: String,
 }
