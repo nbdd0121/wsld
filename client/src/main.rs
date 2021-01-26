@@ -14,14 +14,20 @@ use std::process::exit;
 use tokio::io::AsyncWriteExt;
 
 static CONFIG: Lazy<Config> = Lazy::new(|| {
-    let mut config_path = dirs::home_dir().unwrap_or_else(|| {
-        eprintln!("cannot find home dir");
-        exit(1);
-    });
-    config_path.push(".wsld.toml");
-    let config_file = match std::fs::read(config_path) {
+    let args: Vec<_> = std::env::args().collect();
+    let (config_path, home) = if args.len() == 2 {
+        ({ args }.swap_remove(1).into(), false)
+    } else {
+        let mut config_path = dirs::home_dir().unwrap_or_else(|| {
+            eprintln!("cannot find home dir");
+            exit(1);
+        });
+        config_path.push(".wsld.toml");
+        (config_path, true)
+    };
+    let config_file = match std::fs::read(&config_path) {
         Ok(f) => f,
-        Err(err) if err.kind() == ErrorKind::NotFound => {
+        Err(err) if err.kind() == ErrorKind::NotFound && home => {
             // If .wsld.toml isn't there, do its name: X11 forwarding
             return Config {
                 x11: Some(Default::default()),
@@ -29,7 +35,7 @@ static CONFIG: Lazy<Config> = Lazy::new(|| {
             };
         }
         Err(err) => {
-            eprintln!("cannot read ~/.wsld.toml: {}", err);
+            eprintln!("cannot read {:?}: {}", config_path, err);
             exit(1);
         }
     };
