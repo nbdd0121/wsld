@@ -88,8 +88,8 @@ pub async fn tcp_forward(config: &'static TcpForwardConfig) -> std::io::Result<(
 
     let _ = execute_iptables(config, "-N wsld").await?;
     execute_iptables(config, "-F wsld").await?.unwrap();
-    let _ = execute_iptables(config, "-D OUTPUT -j wsld").await?;
-    execute_iptables(config, "-I OUTPUT -j wsld").await?.unwrap();
+    let _ = execute_iptables(config, "-D OUTPUT -o lo -j wsld").await?;
+    execute_iptables(config, "-I OUTPUT -o lo -j wsld").await?.unwrap();
 
     for &port in config.ports.iter() {
         execute_iptables(config, &format!("-A wsld -p tcp --dport {} -j REDIRECT --to-port {}", port, config.service_port)).await?.unwrap();
