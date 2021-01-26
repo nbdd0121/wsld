@@ -33,6 +33,18 @@ display = 0
 # Interval between syncs
 # Default to 10min, can be omitted
 interval = "1hr"
+
+# Leave out this section to disable TCP port forwarding
+# This feature is experimental, feedbacks and suggestions welcome.
+# This feature will WSL localhost to Windows localhost, so you can connect
+# servers running in Windows in WSL. This feature requires interaction with
+# iptables, so you need to either run wsld as root or allow wsld to use sudo.
+[tcp_forward]
+# iptables command to use. nftables seem not to work so you need to have
+# the legacy one. If you are not using Debian it is likely you need to change it.
+iptables_cmd = "sudo iptables-legacy"
+# Ports to forward
+ports = [ 1234 ]
 ```
 then run `wsld` and set `DISPLAY=:0`.
 
