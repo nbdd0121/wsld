@@ -7,12 +7,12 @@ use super::CONFIG;
 use tokio::io::AsyncWriteExt;
 use tokio::net::UnixStream;
 
-async fn handle_stream(stream: UnixStream) -> std::io::Result<()> {
+async fn handle_stream(mut stream: UnixStream) -> std::io::Result<()> {
     let mut server = VmSocket::connect(CONFIG.service_port).await?;
     server.write_all(b"x11\0").await?;
 
-    let (client_r, client_w) = stream.into_split();
-    let (server_r, server_w) = server.into_split();
+    let (client_r, client_w) = stream.split();
+    let (server_r, server_w) = server.split();
     let a = connect_stream(client_r, server_w);
     let b = connect_stream(server_r, client_w);
     either(a, b).await
