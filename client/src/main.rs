@@ -1,5 +1,6 @@
 mod config;
 mod time;
+mod util;
 mod vmsocket;
 mod x11;
 mod x11socket;

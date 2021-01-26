@@ -3,6 +3,7 @@
 
 mod config;
 mod time;
+mod util;
 mod vmcompute;
 mod vmsocket;
 mod x11;
