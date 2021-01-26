@@ -15,6 +15,9 @@ pub struct Config {
 
     #[serde(default)]
     pub x11: Option<X11Config>,
+
+    #[serde(default)]
+    pub tcp_forward: Option<TcpForwardConfig>,
 }
 
 impl Default for Config {
@@ -23,6 +26,7 @@ impl Default for Config {
             service_port: default_service_port(),
             time: None,
             x11: None,
+            tcp_forward: None,
         }
     }
 }
@@ -60,4 +64,23 @@ impl Default for X11Config {
             force: false,
         }
     }
+}
+
+fn default_tcp_service_port() -> u16 {
+    6000
+}
+
+fn default_iptables_cmd() -> String {
+    "sudo iptables-legacy".to_owned()
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct TcpForwardConfig {
+    #[serde(default = "default_tcp_service_port")]
+    pub service_port: u16,
+
+    #[serde(default = "default_iptables_cmd")]
+    pub iptables_cmd: String,
+
+    pub ports: Vec<u16>,
 }

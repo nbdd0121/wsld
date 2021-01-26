@@ -1,4 +1,5 @@
 mod config;
+mod tcp;
 mod time;
 mod util;
 mod vmsocket;
@@ -66,6 +67,8 @@ async fn wait_host_up() -> std::io::Result<()> {
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
+    env_logger::init();
+
     Lazy::force(&CONFIG);
 
     if let Err(err) = wait_host_up().await {
@@ -86,6 +89,14 @@ async fn main() {
         tasks.push(tokio::task::spawn(async move {
             if let Err(err) = x11::x11_forward(config).await {
                 eprintln!("Failed to listen: {}", err);
+            }
+        }));
+    }
+
+    if let Some(config) = &CONFIG.tcp_forward {
+        tasks.push(tokio::task::spawn(async move {
+            if let Err(err) = tcp::tcp_forward(config).await {
+                eprintln!("Tcp forwarder error: {}", err);
             }
         }));
     }
