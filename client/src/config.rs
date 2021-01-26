@@ -67,7 +67,8 @@ impl Default for X11Config {
 }
 
 fn default_tcp_service_port() -> u16 {
-    6000
+    // Don't use 6000 to avoid clash with X
+    6001
 }
 
 fn default_iptables_cmd() -> String {
