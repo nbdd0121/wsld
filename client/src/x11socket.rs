@@ -37,16 +37,11 @@ impl X11Lock {
                 Err(_) => {
                     // A lock exists already. Try to see if the lock holder is still alive.
                     let content = fs::read_to_string(&name)?;
-                    let pid = content.trim().parse::<libc::pid_t>().map_err(|_| {
-                        Error::new(
-                            std::io::ErrorKind::InvalidInput,
-                            format!("{} does not contain a valid PID", name),
-                        )
-                    })?;
+                    let pid = content.trim().parse::<libc::pid_t>().ok();
 
-                    let alive = unsafe { libc::kill(pid, 0) } == 0
+                    let alive = pid.map(|pid| unsafe { libc::kill(pid, 0) } == 0
                         || Error::last_os_error().raw_os_error().unwrap() as libc::c_int
-                            != libc::ESRCH;
+                            != libc::ESRCH).unwrap_or(false);
 
                     // The process is still alive
                     if alive && !force {
