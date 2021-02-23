@@ -1,5 +1,6 @@
-use std::fs;
+use std::fs::{self, Permissions};
 use std::io::{Error, Result, Write};
+use std::os::unix::fs::PermissionsExt;
 use tokio::net::UnixListener;
 
 pub struct X11Lock {
@@ -65,6 +66,8 @@ impl X11Lock {
         let _ = std::fs::create_dir_all("/tmp/.X11-unix");
         let _ = std::fs::remove_file(&name);
 
-        UnixListener::bind(name)
+        let socket = UnixListener::bind(&name);
+        let _ = std::fs::set_permissions(&name, Permissions::from_mode(0o777));
+        socket
     }
 }
