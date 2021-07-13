@@ -45,6 +45,12 @@ interval = "1hr"
 iptables_cmd = "sudo iptables-legacy"
 # Ports to forward
 ports = [ 1234 ]
+
+# Leave out this section to disable SSH agent forwarding
+[ssh_agent]
+# Default to the path below, can be omitted if unchanged
+# Set `SSH_AUTH_SOCK` to the path you specified.
+ssh_auth_sock = "/tmp/.wsld/ssh_auth_sock"
 ```
 then run `wsld` and set `DISPLAY=:0`.
 

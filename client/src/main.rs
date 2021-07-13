@@ -1,4 +1,5 @@
 mod config;
+mod ssh_agent;
 mod tcp;
 mod time;
 mod util;
@@ -97,6 +98,14 @@ async fn main() {
         tasks.push(tokio::task::spawn(async move {
             if let Err(err) = tcp::tcp_forward(config).await {
                 eprintln!("Tcp forwarder error: {}", err);
+            }
+        }));
+    }
+
+    if let Some(config) = &CONFIG.ssh_agent {
+        tasks.push(tokio::task::spawn(async move {
+            if let Err(err) = ssh_agent::ssh_agent_forward(config).await {
+                eprintln!("SSH-Agent forwarder error: {}", err);
             }
         }));
     }

@@ -34,3 +34,7 @@ Windows could access service listening to localhost in WSL2, but WSL2 couldn't d
 You might think we can just listen on a TCP port in WSL2 and forward it to Windows through Vsock, just like how we forward X11. However, this is not true. If you listen to a port in WSL2, Windows-to-WSL2 localhost forwarding will kick in, forwarding the `wsldhost` to Windows connection back into `wsld` inside WSL2. This creates a loop and soon both daemons will run out of file descriptors or memory.
 
 We creatively use iptables redirection to achieve this forwarding. `wsld` will only listen on a service port, which is not any of the ports being forwarded. WSL uses `/proc/net/tcp` to determine if a port is being listened on and whether forwarding from Windows to WSL2 should kick in. Because none of the forwarded port is being listened on, we avoid the loop issue. To allow `wsld` to intercept requests sent to forwarded ports, we employ iptables's nat table's OUTPUT chain. `wsld` will add one `REDIRECT` rule for each port being forwarded.
+
+# SSH Agent Forwarding
+
+`wsld` will listen on `/tmp/.wsld/ssh_auth_sock` (or another path configured) and forward the connection to `wsldhost`, which will in turn forward the connection to the named pipe `\\.\pipe\openssh-ssh-agent` which OpenSSH on Windows listens on.

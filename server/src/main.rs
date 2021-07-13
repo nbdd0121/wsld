@@ -2,6 +2,7 @@
 #![windows_subsystem = "windows"]
 
 mod config;
+mod ssh_agent;
 mod tcp;
 mod time;
 mod util;
@@ -33,6 +34,7 @@ async fn handle_stream(mut stream: TcpStream) -> std::io::Result<()> {
         b"x11\0" => x11::handle_x11(stream).await,
         b"time" => time::handle_time(stream).await,
         b"tcp\0" => tcp::handle_tcp(stream).await,
+        b"ssha" => ssh_agent::handle_ssh_agent(stream).await,
         b"noop" => Ok(()),
         _ => Err(Error::new(
             ErrorKind::InvalidData,

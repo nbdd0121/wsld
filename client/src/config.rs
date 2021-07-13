@@ -18,6 +18,9 @@ pub struct Config {
 
     #[serde(default)]
     pub tcp_forward: Option<TcpForwardConfig>,
+
+    #[serde(default)]
+    pub ssh_agent: Option<SshAgentConfig>,
 }
 
 impl Default for Config {
@@ -27,6 +30,7 @@ impl Default for Config {
             time: None,
             x11: None,
             tcp_forward: None,
+            ssh_agent: None,
         }
     }
 }
@@ -84,4 +88,14 @@ pub struct TcpForwardConfig {
     pub iptables_cmd: String,
 
     pub ports: Vec<u16>,
+}
+
+fn default_ssh_auth_sock() -> String {
+    "/tmp/.wsld/ssh_auth_sock".to_owned()
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct SshAgentConfig {
+    #[serde(default = "default_ssh_auth_sock")]
+    pub ssh_auth_sock: String,
 }
