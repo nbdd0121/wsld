@@ -3,7 +3,7 @@ use uuid::Uuid;
 
 #[serde(rename_all = "PascalCase")]
 #[derive(Debug, Deserialize)]
-pub struct ComputeSystem {
+struct ComputeSystem {
     pub id: Uuid,
     pub system_type: String,
     pub owner: String,
@@ -12,7 +12,7 @@ pub struct ComputeSystem {
     pub state: String,
 }
 
-pub fn enumerate_compute_systems(query: &str) -> std::io::Result<Vec<ComputeSystem>> {
+fn enumerate_compute_systems(query: &str) -> std::io::Result<Vec<ComputeSystem>> {
     use std::ffi::CString;
     use std::io::{Error, ErrorKind};
     use widestring::WideCString;
@@ -73,7 +73,8 @@ pub fn enumerate_compute_systems(query: &str) -> std::io::Result<Vec<ComputeSyst
     }
 }
 
-pub fn get_wsl_vmid() -> std::io::Result<Option<Uuid>> {
+#[allow(unused)]
+fn get_wsl_vmid_by_hcs() -> std::io::Result<Option<Uuid>> {
     let vms = enumerate_compute_systems("{}")?;
     for vm in vms {
         if vm.owner == "WSL" {
@@ -81,4 +82,27 @@ pub fn get_wsl_vmid() -> std::io::Result<Option<Uuid>> {
         }
     }
     Ok(None)
+}
+
+pub fn get_wsl_vmid_by_reg() -> std::io::Result<Option<Uuid>> {
+    let list = winreg::RegKey::predef(winreg::enums::HKEY_LOCAL_MACHINE)
+        .open_subkey(r"SOFTWARE\Microsoft\Windows NT\CurrentVersion\HostComputeService\VolatileStore\ComputeSystem")?;
+    for k in list.enum_keys() {
+        let k = k?;
+        let subkey = list.open_subkey(&k)?;
+        let ty: u32 = match subkey.get_value("ComputeSystemType") {
+            Ok(v) => v,
+            Err(_) => continue,
+        };
+        if ty == 2 {
+            if let Ok(v) = k.parse() {
+                return Ok(Some(v));
+            }
+        }
+    }
+    Ok(None)
+}
+
+pub fn get_wsl_vmid() -> std::io::Result<Option<Uuid>> {
+    get_wsl_vmid_by_reg()
 }
