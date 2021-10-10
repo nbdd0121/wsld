@@ -84,6 +84,7 @@ fn get_wsl_vmid_by_hcs() -> std::io::Result<Option<Uuid>> {
     Ok(None)
 }
 
+// This is unreliable, so only use this as a backup method.
 pub fn get_wsl_vmid_by_reg() -> std::io::Result<Option<Uuid>> {
     let list = winreg::RegKey::predef(winreg::enums::HKEY_LOCAL_MACHINE)
         .open_subkey(r"SOFTWARE\Microsoft\Windows NT\CurrentVersion\HostComputeService\VolatileStore\ComputeSystem")?;
@@ -104,5 +105,10 @@ pub fn get_wsl_vmid_by_reg() -> std::io::Result<Option<Uuid>> {
 }
 
 pub fn get_wsl_vmid() -> std::io::Result<Option<Uuid>> {
+    match get_wsl_vmid_by_hcs() {
+        Ok(v) => return Ok(v),
+        Err(err) if err.kind() == std::io::ErrorKind::PermissionDenied => (),
+        Err(err) => return Err(err),
+    }
     get_wsl_vmid_by_reg()
 }
