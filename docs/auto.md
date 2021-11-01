@@ -27,17 +27,35 @@ created task and clicking `Run`.
 * Add this to your `~/.profile` or `~/.bash_profile` or `~/.zlogin`:
 
 ``` bash
-export DISPLAY=:0
-
-if ! pgrep wsld >> /dev/null 2>&1 ; then
+function _wsl_x11_vsock() {
+  # https://github.com/nbdd0121/wsld/blob/master/docs/auto.md#on-wsl2
+  export DISPLAY=:0
+  if ! pgrep wsld >> /dev/null 2>&1 ; then
+    # https://github.com/nbdd0121/wsld/commit/c3a2bb7ccab8c11710fa6b49cf10434a80a853dd
+    # Delete lock files/directories.
+    rm -rf "/tmp/.X${DISPLAY/:/}-lock" "/tmp/.X11-unix/X${DISPLAY/:/}"
     nohup wsld > /dev/null < /dev/null 2>&1 &
     disown
 
-    # sleep until $DISPLAY is up
-    while ! xset q > /dev/null 2>&1 ; do
-        sleep 0.3
+    # sleep for N seconds until $DISPLAY is up
+    local START;
+    START=$(date +%s)
+    local CURRENT=$START
+    local WAIT=5
+    while [[ $((CURRENT - START)) -le "$WAIT" ]]; do
+      { xset q > /dev/null 2>&1 && break; } || sleep 0.3;
+      CURRENT=$(date +%s)
     done
-fi
+    if [[ $((CURRENT - START)) -gt "$WAIT" ]]; then
+      echo >&2 "Please ensure that 'wsldhost.exe --daemon' and a X11 server is running on the Windows host."
+      # Kill the current instance so it can be re-initialized.
+      pkill wsld
+    fi
+  fi
+}
+
+# Initialize wsld
+_wsl_x11_vsock
 ```
 
 Using `xset q` to test the `$DISPLAY` makes it possible to run a command like `wsl.exe bash --login -c some-terminal`, otherwise `some-terminal` will fail because the `$DISPLAY` isn't ready yet.
