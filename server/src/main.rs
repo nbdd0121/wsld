@@ -10,9 +10,9 @@ mod vmcompute;
 mod vmsocket;
 mod x11;
 
+use clap::Parser;
 use once_cell::sync::Lazy;
 use std::io::{Error, ErrorKind};
-use structopt::StructOpt;
 use tokio::io::AsyncReadExt;
 use tokio::net::TcpStream;
 use uuid::Uuid;

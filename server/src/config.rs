@@ -1,5 +1,5 @@
+use clap::Parser;
 use std::io::{Error, ErrorKind};
-use structopt::StructOpt;
 use uuid::Uuid;
 
 fn parse_uuid(str: &str) -> std::io::Result<Uuid> {
@@ -7,24 +7,24 @@ fn parse_uuid(str: &str) -> std::io::Result<Uuid> {
         .map_err(|err| Error::new(ErrorKind::InvalidInput, format!("Invalid UUID: {}", err)))
 }
 
-#[derive(Debug, StructOpt)]
-#[structopt(name = "wsldhost")]
+#[derive(Debug, Parser)]
+#[clap(name = "wsldhost")]
 pub struct Config {
-    #[structopt(short, long)]
+    #[clap(short, long)]
     pub daemon: bool,
 
-    #[structopt(short = "p", long, default_value = "6000")]
+    #[clap(short = 'p', long, default_value = "6000")]
     pub service_port: u32,
 
-    #[structopt(name = "VMID", parse(try_from_str = parse_uuid))]
+    #[clap(name = "VMID", parse(try_from_str = parse_uuid))]
     pub vmid: Option<Uuid>,
 
-    #[structopt(flatten)]
+    #[clap(flatten)]
     pub x11: X11Config,
 }
 
-#[derive(Debug, StructOpt)]
+#[derive(Debug, Parser)]
 pub struct X11Config {
-    #[structopt(long, default_value = "127.0.0.1:6000")]
+    #[clap(long, default_value = "127.0.0.1:6000")]
     pub display: String,
 }
