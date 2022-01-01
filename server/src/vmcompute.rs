@@ -1,8 +1,9 @@
 use serde::Deserialize;
 use uuid::Uuid;
 
-#[serde(rename_all = "PascalCase")]
+#[allow(dead_code)]
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "PascalCase")]
 struct ComputeSystem {
     pub id: Uuid,
     pub system_type: String,
@@ -13,7 +14,6 @@ struct ComputeSystem {
 }
 
 fn enumerate_compute_systems(query: &str) -> std::io::Result<Vec<ComputeSystem>> {
-    use std::ffi::CString;
     use std::io::{Error, ErrorKind};
     use widestring::WideCString;
     use winapi::shared::minwindef::LPVOID;
@@ -24,15 +24,12 @@ fn enumerate_compute_systems(query: &str) -> std::io::Result<Vec<ComputeSystem>>
     unsafe {
         // Load vmcompute.dll and get HcsEnumerateComputeSystems. This cannot yet
         // be done using `#[link] extern {}` as it is semi-documented API.
-        let module = LoadLibraryA(CString::new("vmcompute.dll").unwrap().as_ptr());
+        let module = LoadLibraryA(b"vmcompute.dll\0".as_ptr() as _);
         if module.is_null() {
             return Err(std::io::Error::last_os_error());
         }
 
-        let func = GetProcAddress(
-            module,
-            CString::new("HcsEnumerateComputeSystems").unwrap().as_ptr(),
-        );
+        let func = GetProcAddress(module, b"HcsEnumerateComputeSystems\0".as_ptr() as _);
         if func.is_null() {
             FreeLibrary(module);
             return Err(std::io::Error::last_os_error());

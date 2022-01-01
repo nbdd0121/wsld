@@ -20,7 +20,7 @@ use uuid::Uuid;
 use config::Config;
 use vmsocket::VmSocket;
 
-static CONFIG: Lazy<Config> = Lazy::new(|| Config::from_args());
+static CONFIG: Lazy<Config> = Lazy::new(|| Config::parse());
 
 async fn handle_stream(mut stream: TcpStream) -> std::io::Result<()> {
     // Read the function code at the start of the stream for demultiplexing
