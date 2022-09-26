@@ -5,7 +5,7 @@ use super::CONFIG;
 
 use log::{info, warn};
 use std::io::{Error, ErrorKind, Result as IoResult};
-use std::net::SocketAddr;
+use std::net::{self, SocketAddr};
 use tokio::io::AsyncWriteExt;
 use tokio::net::{TcpListener, TcpStream};
 
@@ -34,10 +34,19 @@ fn get_origin_dst(stream: &TcpStream) -> IoResult<SocketAddr> {
         }
 
         let addr = match storage.sin6_family as libc::c_int {
-            libc::AF_INET => SocketAddr::V4(mem::transmute(
-                *(&storage as *const _ as *const libc::sockaddr_in),
+            libc::AF_INET => {
+                let view = *(&storage as *const _ as *const libc::sockaddr_in);
+                SocketAddr::V4(net::SocketAddrV4::new(
+                    net::Ipv4Addr::from(view.sin_addr.s_addr.to_ne_bytes()),
+                    u16::from_be(view.sin_port),
+                ))
+            }
+            libc::AF_INET6 => SocketAddr::V6(net::SocketAddrV6::new(
+                net::Ipv6Addr::from(storage.sin6_addr.s6_addr),
+                u16::from_be(storage.sin6_port),
+                storage.sin6_flowinfo,
+                storage.sin6_scope_id,
             )),
-            libc::AF_INET6 => SocketAddr::V6(mem::transmute(storage)),
             _ => return Err(Error::new(ErrorKind::InvalidData, "unknown address family")),
         };
 
