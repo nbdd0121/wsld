@@ -110,6 +110,11 @@ async fn main() {
         }));
     }
 
+    // Return an error code if no task is running.
+    if tasks.is_empty() {
+        std::process::exit(1);
+    }
+
     for task in tasks {
         let _ = task.await;
     }
