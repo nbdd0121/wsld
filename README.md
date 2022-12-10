@@ -26,6 +26,9 @@ In WSL, you will need to put config file `.wsld.toml` in your home directory. It
 # X11 display number to listen *inside* WSL. The X server in Windows can specified as argument when running wsldhost.exe.
 # Default to 0, can be omitted.
 display = 0
+# Whether to override existing X11 sockets. If your setup does not clean up /tmp automatically, then you probably want to set this to true.
+# Default to false.
+force = true
 
 # Leave out this section to disable time synchronisation
 # If you need time synchronisation, you should either run wsld with root, or give it `cap_sys_time` capability using `sudo setcap cap_sys_time+eip <PATH to wsld>`.
