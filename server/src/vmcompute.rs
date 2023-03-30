@@ -62,7 +62,12 @@ fn enumerate_compute_systems(query: &str) -> std::io::Result<Vec<ComputeSystem>>
         FreeLibrary(module);
 
         if hr != 0 {
-            return Err(std::io::Error::from_raw_os_error(hr));
+            let err = Error::from_raw_os_error(hr);
+            if hr == 0x8037011Bu32 as i32 {
+                // HCS_E_ACCESS_DENIED, this is currently uncategorized in Rust
+                return Err(Error::new(ErrorKind::PermissionDenied, err));
+            }
+            return Err(err);
         }
 
         serde_json::from_str(&compute_systems)
