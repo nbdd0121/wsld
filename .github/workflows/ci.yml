@@ -7,14 +7,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
-
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          default: true
-          override: true
+      - uses: actions/checkout@v3
 
       - name: Build
         working-directory: client
@@ -23,7 +16,7 @@ jobs:
       - name: Strip Debug Symbols
         run: strip target/release/wsld
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: 'wsld'
           path: target/release/wsld
@@ -40,20 +33,13 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - uses: actions/checkout@v2
-
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          default: true
-          override: true
+      - uses: actions/checkout@v3
 
       - name: Build
         working-directory: server
         run: cargo build --release
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: 'wsldhost.exe'
           path: target/release/wsldhost.exe
