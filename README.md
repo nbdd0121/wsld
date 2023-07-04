@@ -13,7 +13,7 @@ Implementation detail can be found [here](docs/impl.md).
 
 This program is written in Rust. If you do not have Rust toolchain installed you can get it from https://rustup.rs/. Building on Windows also requires Visual C++ toolchain.
 
-Install in WSL using `cargo install --git https://github.com/nbdd0121/wsld wsld` and install in Windows using `cargo install --git https://github.com/nbdd0121/wsld wsldhost` (The binary will be installed to `~/.cargo/bin/wsld` and `%USERPROFILE%\.cargo\bin\wsldhost.exe`).
+Install in WSL using `cargo install --locked --git https://github.com/nbdd0121/wsld wsld` and install in Windows using `cargo install --locked --git https://github.com/nbdd0121/wsld wsldhost` (The binary will be installed to `~/.cargo/bin/wsld` and `%USERPROFILE%\.cargo\bin\wsldhost.exe`).
 
 You can also download pre-built binaries from [releases](https://github.com/nbdd0121/wsld/releases), which are automatically compiled using [GitHub Actions](https://github.com/nbdd0121/wsld/actions).
 
