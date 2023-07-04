@@ -5,7 +5,7 @@ authors = ["Gary Guo <gary@garyguo.net>"]
 edition = "2021"
 
 [dependencies]
-tokio = { version = "=1.20.0", features = ["net", "rt", "macros", "io-util", "process", "time"] }
+tokio = { version = "~1.20", features = ["net", "rt", "macros", "io-util", "process", "time"] }
 libc = "0.2"
 humantime = "2.1"
 humantime-serde = "1.0"

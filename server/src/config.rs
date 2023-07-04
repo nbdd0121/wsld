@@ -16,7 +16,7 @@ pub struct Config {
     #[clap(short = 'p', long, default_value = "6000")]
     pub service_port: u32,
 
-    #[clap(name = "VMID", parse(try_from_str = parse_uuid))]
+    #[clap(name = "VMID", value_parser = parse_uuid)]
     pub vmid: Option<Uuid>,
 
     #[clap(flatten)]
