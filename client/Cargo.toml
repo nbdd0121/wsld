@@ -2,7 +2,7 @@
 name = "wsld"
 version = "0.1.0"
 authors = ["Gary Guo <gary@garyguo.net>"]
-edition = "2018"
+edition = "2021"
 
 [dependencies]
 tokio = { version = "1", features = ["net", "rt", "macros", "io-util", "process", "time"] }
@@ -10,8 +10,8 @@ libc = "0.2"
 humantime = "2.1"
 humantime-serde = "1.0"
 serde = { version = "1", features = [ "derive" ] }
-toml = "0.5"
+toml = "0.7"
 once_cell = "1.5"
-dirs = "4.0"
+dirs = "5.0"
 log = "0.4"
-env_logger = "0.9"
+env_logger = "0.10"

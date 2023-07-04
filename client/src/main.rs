@@ -27,7 +27,7 @@ static CONFIG: Lazy<Config> = Lazy::new(|| {
         config_path.push(".wsld.toml");
         (config_path, true)
     };
-    let config_file = match std::fs::read(&config_path) {
+    let config_file = match std::fs::read_to_string(&config_path) {
         Ok(f) => f,
         Err(err) if err.kind() == ErrorKind::NotFound && home => {
             // If .wsld.toml isn't there, do its name: X11 forwarding
@@ -41,7 +41,7 @@ static CONFIG: Lazy<Config> = Lazy::new(|| {
             exit(1);
         }
     };
-    toml::from_slice(&config_file).unwrap_or_else(|err| {
+    toml::from_str(&config_file).unwrap_or_else(|err| {
         eprintln!("invalid config file: {}", err);
         exit(1);
     })
