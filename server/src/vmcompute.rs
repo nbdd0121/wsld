@@ -5,10 +5,15 @@ use uuid::Uuid;
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "PascalCase")]
 struct ComputeSystem {
-    pub id: Uuid,
+    // Not all compute systems use a GUID as their ID (e.g. Docker Desktop), so keep this
+    // a string and only parse it as a UUID for the systems we actually care about.
+    pub id: String,
+    #[serde(default)]
     pub system_type: String,
+    #[serde(default)]
     pub owner: String,
-    pub runtime_id: Uuid,
+    #[serde(default)]
+    pub runtime_id: Option<Uuid>,
     #[serde(default)]
     pub state: String,
 }
@@ -80,7 +85,15 @@ fn get_wsl_vmid_by_hcs() -> std::io::Result<Option<Uuid>> {
     let vms = enumerate_compute_systems("{}")?;
     for vm in vms {
         if vm.owner == "WSL" {
-            return Ok(Some(vm.id));
+            // The WSL VM itself must have a GUID as its ID -- we need it to connect. Report
+            // a parse failure instead of pretending WSL isn't running.
+            let id = vm.id.parse().map_err(|err| {
+                std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    format!("WSL compute system has a non-GUID ID {:?}: {}", vm.id, err),
+                )
+            })?;
+            return Ok(Some(id));
         }
     }
     Ok(None)
