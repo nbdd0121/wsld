@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
 
       - name: Build
         working-directory: client
@@ -16,12 +16,12 @@ jobs:
       - name: Strip Debug Symbols
         run: strip target/release/wsld
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v7
         with:
           name: 'wsld'
           path: target/release/wsld
 
-      - uses: softprops/action-gh-release@v1
+      - uses: softprops/action-gh-release@v3
         if: startsWith(github.ref, 'refs/tags/')
         with:
           prerelease: true
@@ -33,18 +33,18 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
 
       - name: Build
         working-directory: server
         run: cargo build --release
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v7
         with:
           name: 'wsldhost.exe'
           path: target/release/wsldhost.exe
 
-      - uses: softprops/action-gh-release@v1
+      - uses: softprops/action-gh-release@v3
         if: startsWith(github.ref, 'refs/tags/')
         with:
           prerelease: true
